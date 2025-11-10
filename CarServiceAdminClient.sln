@@ -5,9 +5,9 @@ VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarServiceAdminClient", "CarServiceAdminClient.csproj", "{25CE0E5C-FA99-47F7-A007-207B25F31B57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarServiceServer", "..\CarServiceServer\CarServiceServer.csproj", "{97FB4622-713C-4FC4-87B6-9D3D3A5EE83D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarService.Server", "..\CarService.Server\CarService.Server.csproj", "{1DD237FB-B33A-470F-B4B8-804C5E20FB2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +19,10 @@ Global
 		{25CE0E5C-FA99-47F7-A007-207B25F31B57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25CE0E5C-FA99-47F7-A007-207B25F31B57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{25CE0E5C-FA99-47F7-A007-207B25F31B57}.Release|Any CPU.Build.0 = Release|Any CPU
-		{97FB4622-713C-4FC4-87B6-9D3D3A5EE83D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{97FB4622-713C-4FC4-87B6-9D3D3A5EE83D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{97FB4622-713C-4FC4-87B6-9D3D3A5EE83D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{97FB4622-713C-4FC4-87B6-9D3D3A5EE83D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1DD237FB-B33A-470F-B4B8-804C5E20FB2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DD237FB-B33A-470F-B4B8-804C5E20FB2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DD237FB-B33A-470F-B4B8-804C5E20FB2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DD237FB-B33A-470F-B4B8-804C5E20FB2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
