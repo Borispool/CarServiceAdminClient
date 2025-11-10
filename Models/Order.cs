@@ -20,7 +20,12 @@ namespace CarServiceAdminClient.Models
         private DateTime _creationDate;
         public DateTime CreationDate { get => _creationDate; set { _creationDate = value; OnPropertyChanged(); } }
 
-        // *** НОВЕ ПОЛЕ, яке ти просив ***
+        private decimal _cost;
+        public decimal Cost
+        {
+            get => _cost;
+            set { _cost = value; OnPropertyChanged(); }
+        }
         private bool _isRecurringProblem;
         public bool IsRecurringProblem { get => _isRecurringProblem; set { _isRecurringProblem = value; OnPropertyChanged(); } }
     }

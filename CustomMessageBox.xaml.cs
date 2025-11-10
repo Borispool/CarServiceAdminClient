@@ -1,86 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows;
-using CarServiceAdminClient;
+﻿using System.Windows;
 
 namespace CarServiceAdminClient
 {
     public partial class CustomMessageBox : Window
     {
-        public MessageBoxResult Result { get; private set; } = MessageBoxResult.None;
+
+        public MessageBoxResult CustomResult { get; private set; } = MessageBoxResult.None; // Зберігаємо результат для Yes/No/Cancel
 
         public CustomMessageBox(string message, string title, MessageBoxButton buttons, MessageBoxImage icon)
         {
             InitializeComponent();
-            Owner = Application.Current.MainWindow; // Робимо його модальним до головного вікна
+            Owner = Application.Current.MainWindow;
 
             TitleTextBlock.Text = title;
             MessageTextBlock.Text = message;
 
-            // Налаштування іконок
+            // Налаштування іконок (без змін)
             switch (icon)
             {
-                case MessageBoxImage.Information:
-                    IconTextBlock.Text = "ℹ️"; // Інформація
-                    break;
-                case MessageBoxImage.Question:
-                    IconTextBlock.Text = "❓"; // Питання
-                    break;
-                case MessageBoxImage.Warning:
-                    IconTextBlock.Text = "⚠️"; // Попередження
-                    break;
-                case MessageBoxImage.Error:
-                    IconTextBlock.Text = "❌"; // Помилка
-                    break;
-                default:
-                    IconTextBlock.Visibility = Visibility.Collapsed;
-                    break;
+                case MessageBoxImage.Information: IconTextBlock.Text = "ℹ️"; break;
+                case MessageBoxImage.Question: IconTextBlock.Text = "❓"; break;
+                case MessageBoxImage.Warning: IconTextBlock.Text = "⚠️"; break;
+                case MessageBoxImage.Error: IconTextBlock.Text = "❌"; break;
+                default: IconTextBlock.Visibility = Visibility.Collapsed; break;
             }
 
-            // Налаштування кнопок
+            // Налаштування кнопок (без змін)
             switch (buttons)
             {
-                case MessageBoxButton.OK:
-                    OkButton.Visibility = Visibility.Visible;
-                    break;
+                case MessageBoxButton.OK: OkButton.Visibility = Visibility.Visible; break;
                 case MessageBoxButton.YesNo:
                     YesButton.Visibility = Visibility.Visible;
                     NoButton.Visibility = Visibility.Visible;
-                    OkButton.Visibility = Visibility.Collapsed;
+                    OkButton.Visibility = Visibility.Collapsed; // Ховаємо OK для Yes/No
                     break;
-                    // Можна додати інші комбінації, якщо потрібно
+                    // Можна додати інші комбінації
             }
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            Result = MessageBoxResult.OK;
-            this.Close();
+            // *** ЗМІНЕНО: Встановлюємо стандартний DialogResult ***
+            this.DialogResult = true;
+            CustomResult = MessageBoxResult.OK; // Зберігаємо тип кнопки
+            // this.Close(); // Close викликається автоматично при встановленні DialogResult
         }
 
         private void YesButton_Click(object sender, RoutedEventArgs e)
         {
-            Result = MessageBoxResult.Yes;
-            this.Close();
+            // *** ЗМІНЕНО: Встановлюємо стандартний DialogResult ***
+            this.DialogResult = true;
+            CustomResult = MessageBoxResult.Yes; // Зберігаємо тип кнопки
+            // this.Close(); // Close викликається автоматично
         }
 
         private void NoButton_Click(object sender, RoutedEventArgs e)
         {
-            Result = MessageBoxResult.No;
-            this.Close();
+            // *** ЗМІНЕНО: Встановлюємо стандартний DialogResult ***
+            this.DialogResult = false; // ShowDialog() поверне false
+            CustomResult = MessageBoxResult.No; // Зберігаємо тип кнопки
+            // this.Close(); // Close викликається автоматично
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            Result = MessageBoxResult.Cancel;
-            this.Close();
+            // *** ЗМІНЕНО: Встановлюємо стандартний DialogResult ***
+            this.DialogResult = false; // ShowDialog() поверне false
+            CustomResult = MessageBoxResult.Cancel; // Зберігаємо тип кнопки
+                                                    // this.Close(); // Close викликається автоматично
         }
     }
 }

@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:CarServiceAdminClient.ViewModels"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel}"
-        Title="Система адміністрування сервісу" 
+        Title="Система адміністрування сервісу"
         Height="650" Width="1100" MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen">
     <Grid>
@@ -17,7 +18,6 @@
             </LinearGradientBrush>
         </Grid.Background>
 
-        <!-- ЕКРАН КЛІЄНТІВ -->
         <Grid>
             <Grid.Style>
                 <Style TargetType="Grid">
@@ -40,15 +40,26 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Керування Клієнтами" Style="{StaticResource HeaderStyle}" Grid.Row="0"/>
-                    <StackPanel Grid.Row="1" Margin="0,0,0,15">
+
+                    <TextBlock Grid.Row="0" Text="Керування Клієнтами" Style="{StaticResource HeaderStyle}"/>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Сортувати:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#555"/>
+                        <ComboBox ItemsSource="{Binding ClientSortOptions}"
+                                  SelectedItem="{Binding SelectedClientSortOption}"
+                                  MinWidth="150"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Margin="0,0,0,15">
                         <TextBlock Text="Пошук (Прізвище, Телефон):" Margin="0,0,0,5" Foreground="#555"/>
                         <TextBox Text="{Binding ClientSearchText, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
-                    <ListBox Grid.Row="2" ItemsSource="{Binding ClientsView}" SelectedItem="{Binding SelectedClient}" Style="{StaticResource ClientListBoxStyle}" HorizontalContentAlignment="Stretch">
+
+                    <ListBox Grid.Row="3" ItemsSource="{Binding ClientsView}" SelectedItem="{Binding SelectedClient}" Style="{StaticResource ClientListBoxStyle}" HorizontalContentAlignment="Stretch">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="10">
@@ -58,7 +69,8 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <StackPanel Orientation="Horizontal" Grid.Row="3" Margin="0,15,0,0">
+
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,15,0,0">
                         <Button Content="Додати" Command="{Binding AddClientCommand}"/>
                         <Button Content="Редагувати" Command="{Binding EditClientCommand}"/>
                         <Button Content="Видалити" Command="{Binding DeleteClientCommand}"/>
@@ -67,30 +79,37 @@
             </Border>
 
             <Grid Grid.Column="1">
+                <TextBlock Text="Оберіть клієнта зі списку, щоб переглянути деталі"
+                           Style="{StaticResource PlaceholderTextStyle}"
+                           Visibility="{Binding SelectedClient, Converter={StaticResource InverseNullToVisibilityConverter}}"/>
+
                 <Border Style="{StaticResource DetailsCardStyle}" Visibility="{Binding SelectedClient, Converter={StaticResource NullToVisibilityConverter}}">
                     <Grid>
-                        <Button Content="Вихід" Style="{StaticResource ExitButtonStyle}" Command="{Binding ExitApplicationCommand}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,15,15,0" />
+                        <Button Content="Вихід" Style="{StaticResource ExitButtonStyle}"
+                                Command="{Binding ExitApplicationCommand}"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,15,15,0" />
+
                         <StackPanel Margin="30">
                             <TextBlock Text="Повне ім'я:" Style="{StaticResource LabelTextStyle}"/>
-                            <TextBlock Text="{Binding SelectedClient.FullName}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,20"/>
+                            <TextBlock Text="{Binding SelectedClient.FullName}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,15"/>
                             <TextBlock Text="ID Клієнта:" Style="{StaticResource LabelTextStyle}"/>
-                            <TextBlock Text="{Binding SelectedClient.Id}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,20"/>
+                            <TextBlock Text="{Binding SelectedClient.Id}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,15"/>
                             <TextBlock Text="Телефон:" Style="{StaticResource LabelTextStyle}"/>
-                            <TextBlock Text="{Binding SelectedClient.PhoneNumber}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,20"/>
+                            <TextBlock Text="{Binding SelectedClient.PhoneNumber}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,15"/>
                             <TextBlock Text="Email:" Style="{StaticResource LabelTextStyle}"/>
-                            <TextBlock Text="{Binding SelectedClient.Email}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,40"/>
-                            <TextBlock Text="Дії з клієнтом:" Style="{StaticResource LabelTextStyle}"/>
+                            <TextBlock Text="{Binding SelectedClient.Email}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,15"/>
+                            <TextBlock Text="Персональна знижка:" Style="{StaticResource LabelTextStyle}" Margin="0,10,0,0"/>
+                            <TextBlock Text="{Binding CurrentClientDiscount}" Style="{StaticResource DataTextStyle}" Foreground="Green" FontWeight="Bold"/>
+                            <TextBlock Text="Дії з клієнтом:" Style="{StaticResource LabelTextStyle}" Margin="0,20,0,0"/>
                             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                <Button Content="Автомобілі" Command="{Binding ShowCarsViewCommand}" />
+                                <Button Content="Автомобілі Клієнта" Command="{Binding ShowCarsViewCommand}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>
                 </Border>
-                <TextBlock Text="Оберіть клієнта зі списку, щоб переглянути деталі" Style="{StaticResource PlaceholderTextStyle}" Visibility="{Binding SelectedClient, Converter={StaticResource InverseNullToVisibilityConverter}}"/>
             </Grid>
         </Grid>
 
-        <!-- ЕКРАН АВТОМОБІЛІВ -->
         <Grid>
             <Grid.Style>
                 <Style TargetType="Grid">
@@ -109,31 +128,38 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0">
+                <TextBlock Text="Оберіть автомобіль зі списку"
+                           Style="{StaticResource PlaceholderTextStyle}"
+                           Visibility="{Binding SelectedCar, Converter={StaticResource InverseNullToVisibilityConverter}}"/>
+
                 <Border Style="{StaticResource DetailsCardStyle}" Visibility="{Binding SelectedCar, Converter={StaticResource NullToVisibilityConverter}}">
                     <Grid>
-                        <Button Content="Назад до клієнтів" Command="{Binding BackToClientsCommand}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,15,15,0" />
+                        <Button Content="Назад до клієнтів" Command="{Binding BackToClientsCommand}"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,15,15,0" />
+
                         <StackPanel Margin="30" DataContext="{Binding SelectedCar}">
                             <TextBlock Text="Марка:" Style="{StaticResource LabelTextStyle}"/>
-                            <TextBlock Text="{Binding Brand}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,20"/>
+                            <TextBlock Text="{Binding Brand}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,15"/>
                             <TextBlock Text="Модель:" Style="{StaticResource LabelTextStyle}"/>
-                            <TextBlock Text="{Binding Model}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,20"/>
+                            <TextBlock Text="{Binding Model}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,15"/>
                             <TextBlock Text="VIN-код:" Style="{StaticResource LabelTextStyle}"/>
-                            <TextBlock Text="{Binding VIN}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,20"/>
+                            <TextBlock Text="{Binding VIN}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,15"/>
                             <TextBlock Text="Рік випуску:" Style="{StaticResource LabelTextStyle}"/>
-                            <TextBlock Text="{Binding Year}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,20"/>
+                            <TextBlock Text="{Binding Year}" Style="{StaticResource DataTextStyle}" Margin="0,0,0,15"/>
                             <TextBlock Text="Дії з автомобілем:" Style="{StaticResource LabelTextStyle}" Margin="0,20,0,0"/>
                             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                <Button Content="Керування Замовленнями" Command="{Binding DataContext.ShowOrdersViewCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                <Button Content="Замовлення для Авто"
+                                        Command="{Binding DataContext.ShowOrdersViewCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>
                 </Border>
-                <TextBlock Text="Оберіть автомобіль зі списку" Style="{StaticResource PlaceholderTextStyle}" Visibility="{Binding SelectedCar, Converter={StaticResource InverseNullToVisibilityConverter}}"/>
             </Grid>
 
             <Border Grid.Column="1" Background="White" CornerRadius="0,8,8,0">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -145,13 +171,19 @@
                         <TextBlock Text="{Binding SelectedClient.FullName}" FontSize="18" Foreground="#555" Margin="0,-15,0,15"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Row="1" Margin="0,0,0,15">
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Сортувати:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#555"/>
+                        <ComboBox ItemsSource="{Binding CarSortOptions}"
+                                  SelectedItem="{Binding SelectedCarSortOption}"
+                                  MinWidth="150"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Margin="0,0,0,15">
                         <TextBlock Text="Пошук (Марка, Модель, VIN):" Margin="0,0,0,5" Foreground="#555"/>
                         <TextBox Text="{Binding CarSearchText, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
 
-                    <ListBox Grid.Row="2" Style="{StaticResource ClientListBoxStyle}" HorizontalContentAlignment="Stretch"
-                             ItemsSource="{Binding CarsView}" SelectedItem="{Binding SelectedCar}">
+                    <ListBox Grid.Row="3" ItemsSource="{Binding CarsView}" SelectedItem="{Binding SelectedCar}" Style="{StaticResource ClientListBoxStyle}" HorizontalContentAlignment="Stretch">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="10">
@@ -164,16 +196,15 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="3" Margin="0,15,0,0" HorizontalAlignment="Left">
-                        <Button Content="Додати" Command="{Binding AddCarCommand}"/>
-                        <Button Content="Редагувати" Command="{Binding EditCarCommand}"/>
-                        <Button Content="Видалити" Command="{Binding DeleteCarCommand}"/>
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,15,0,0" HorizontalAlignment="Left">
+                        <Button Content="Додати Авто" Command="{Binding AddCarCommand}"/>
+                        <Button Content="Редагувати Авто" Command="{Binding EditCarCommand}"/>
+                        <Button Content="Видалити Авто" Command="{Binding DeleteCarCommand}"/>
                     </StackPanel>
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- ЕКРАН ЗАМОВЛЕНЬ (ПЕРЕРОБЛЕНИЙ) -->
         <Grid>
             <Grid.Style>
                 <Style TargetType="Grid">
@@ -191,23 +222,30 @@
                 <ColumnDefinition Width="400" MinWidth="350"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ЛІВА КОЛОНКА: Історія замовлень -->
             <Border Grid.Column="0" Background="White" CornerRadius="8,0,0,8">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel>
+                    <StackPanel Grid.Row="0">
                         <TextBlock Text="Історія замовлень для" Style="{StaticResource HeaderStyle}" Margin="0,0,0,-5"/>
                         <TextBlock FontSize="18" Foreground="#555" Margin="0,0,0,15">
-                    <Run Text="{Binding SelectedCar.Brand}"/><Run Text=" "/><Run Text="{Binding SelectedCar.Model}"/>
+                            <Run Text="{Binding SelectedCar.Brand}"/><Run Text=" "/><Run Text="{Binding SelectedCar.Model}"/>
                         </TextBlock>
                     </StackPanel>
 
-                    <ListBox Grid.Row="1" ItemsSource="{Binding OrdersView}" SelectedItem="{Binding SelectedOrder}" Style="{StaticResource ClientListBoxStyle}" HorizontalContentAlignment="Stretch">
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Сортувати історію:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="#555"/>
+                        <ComboBox ItemsSource="{Binding OrderSortOptions}"
+                                  SelectedItem="{Binding SelectedOrderSortOption}"
+                                  MinWidth="150"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="2" ItemsSource="{Binding OrdersView}" SelectedItem="{Binding SelectedOrder}" Style="{StaticResource ClientListBoxStyle}" HorizontalContentAlignment="Stretch">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Border Padding="10" Margin="0,0,0,5" BorderBrush="#EEE" BorderThickness="0,0,0,1">
@@ -215,11 +253,14 @@
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
-                                        <TextBlock Grid.Row="0" Text="{Binding Description}" FontWeight="SemiBold" FontSize="14" Foreground="#333" TextWrapping="Wrap"/>
-                                        <TextBlock Grid.Row="1" Foreground="#888" FontSize="12" Margin="0,5,0,0">
-                        <Run Text="Дата:"/>
-                        <Run Text="{Binding CreationDate, StringFormat='dd.MM.yyyy'}"/>
+                                        <TextBlock Grid.Row="0" Text="{Binding Description}" FontWeight="SemiBold" FontSize="13" Foreground="#333" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="1" Foreground="#888" FontSize="11" Margin="0,5,0,0">
+                                            <Run Text="Дата: "/><Run Text="{Binding CreationDate, StringFormat='dd.MM.yyyy'}"/>
+                                        </TextBlock>
+                                        <TextBlock Grid.Row="2" Foreground="#006400" FontSize="11" FontWeight="Bold" Margin="0,2,0,0">
+                                            <Run Text="Вартість: "/><Run Text="{Binding Cost, StringFormat='{}{0:F2} грн'}"/>
                                         </TextBlock>
                                     </Grid>
                                 </Border>
@@ -227,41 +268,61 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <Button Grid.Row="2" Content="Очистити історію" Command="{Binding ClearOrderHistoryCommand}" HorizontalAlignment="Left" Margin="0,15,0,0"/>
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,15,0,0">
+                        <Button Content="Очистити історію" Command="{Binding ClearOrderHistoryCommand}"/>
+                        <Button Content="Видалити вибране" Command="{Binding DeleteSelectedOrderCommand}" Margin="10,0,0,0"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ПРАВА КОЛОНКА: Актуальний стан / Нове замовлення -->
             <Grid Grid.Column="1">
                 <Border Style="{StaticResource DetailsCardStyle}">
                     <Grid>
-                        <Button Content="Назад до авто" Command="{Binding BackToCarsCommand}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,15,15,0" />
+                        <Button Content="Назад до авто" Command="{Binding BackToCarsCommand}"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,15,15,0" />
+
                         <StackPanel Margin="30">
                             <TextBlock Text="Актуальний стан" Style="{StaticResource HeaderStyle}" />
 
-                            <!-- Блок, якщо НЕМАЄ активного замовлення -->
                             <StackPanel Visibility="{Binding ActiveOrder, Converter={StaticResource InverseNullToVisibilityConverter}}">
-                                <TextBlock Text="Наразі активних замовлень немає. Автомобіль обслужено." TextWrapping="Wrap" Foreground="#008000" Margin="0,0,0,30"/>
+                                <TextBlock Text="Наразі активних замовлень немає." TextWrapping="Wrap" Foreground="#008000" Margin="0,0,0,15"/>
                                 <TextBlock Text="Нове замовлення" Style="{StaticResource HeaderStyle}" />
-                                <Button Content="Додати замовлення" Command="{Binding AddOrderCommand}" HorizontalAlignment="Left" />
+                                <Button Content="Створити нове замовлення" Command="{Binding AddOrderCommand}" HorizontalAlignment="Left" />
                             </StackPanel>
 
-                            <!-- Блок, якщо Є активне замовлення -->
-                            <StackPanel DataContext="{Binding ActiveOrder}" Visibility="{Binding DataContext.ActiveOrder, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource NullToVisibilityConverter}}">
-                                <TextBlock Text="Опис проблеми:" Style="{StaticResource LabelTextStyle}" />
-                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Style="{StaticResource DataTextStyle}" Margin="0,0,0,20" Height="80"/>
+                            <Grid DataContext="{Binding ActiveOrder}" Visibility="{Binding ActiveOrder, Converter={StaticResource NullToVisibilityConverter}}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                                <TextBlock Text="Статус:" Style="{StaticResource LabelTextStyle}" Margin="0,10,0,5"/>
-                                <RadioButton GroupName="Status" Content="В очікуванні" IsChecked="{Binding Status, ConverterParameter=В очікуванні, Converter={StaticResource EqualityToBooleanConverter}}" Command="{Binding DataContext.SetStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="В очікуванні"/>
-                                <RadioButton GroupName="Status" Content="В роботі" IsChecked="{Binding Status, ConverterParameter=В роботі, Converter={StaticResource EqualityToBooleanConverter}}" Command="{Binding DataContext.SetStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="В роботі"/>
-                                <RadioButton GroupName="Status" Content="Очікує запчастин" IsChecked="{Binding Status, ConverterParameter=Очікує запчастин, Converter={StaticResource EqualityToBooleanConverter}}" Command="{Binding DataContext.SetStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="Очікує запчастин"/>
-                                <RadioButton GroupName="Status" Content="Завершено" IsChecked="{Binding Status, ConverterParameter=Завершено, Converter={StaticResource EqualityToBooleanConverter}}" Command="{Binding DataContext.SetStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="Завершено"/>
-                            </StackPanel>
+                                <TextBlock Grid.Row="0" Text="Опис проблеми:" Style="{StaticResource LabelTextStyle}" />
+                                <TextBox Grid.Row="1" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Margin="0,0,0,10" MinHeight="60" VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
+
+                                <TextBlock Grid.Row="2" Text="Вартість (грн):" Style="{StaticResource LabelTextStyle}" Margin="0,5,0,0"/>
+                                <TextBox Grid.Row="3" Text="{Binding Cost, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:F2}'}"  Margin="0,0,0,10" />
+
+                                <CheckBox Grid.Row="4" IsChecked="{Binding IsRecurringProblem}" Content="Повторна проблема" VerticalAlignment="Center" Margin="0,0,0,10"/>
+
+                                <TextBlock Grid.Row="5" Text="Статус:" Style="{StaticResource LabelTextStyle}" Margin="0,10,0,5"/>
+
+                                <StackPanel Grid.Row="6">
+                                    <RadioButton GroupName="Status" Content="В очікуванні" IsChecked="{Binding Status, ConverterParameter=В очікуванні, Converter={StaticResource EqualityToBooleanConverter}}" Command="{Binding DataContext.SetStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="В очікуванні"/>
+                                    <RadioButton GroupName="Status" Content="В роботі" IsChecked="{Binding Status, ConverterParameter=В роботі, Converter={StaticResource EqualityToBooleanConverter}}" Command="{Binding DataContext.SetStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="В роботі"/>
+                                    <RadioButton GroupName="Status" Content="Очікує запчастин" IsChecked="{Binding Status, ConverterParameter=Очікує запчастин, Converter={StaticResource EqualityToBooleanConverter}}" Command="{Binding DataContext.SetStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="Очікує запчастин"/>
+                                    <RadioButton GroupName="Status" Content="Завершено" IsChecked="{Binding Status, ConverterParameter=Завершено, Converter={StaticResource EqualityToBooleanConverter}}" Command="{Binding DataContext.SetStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="Завершено"/>
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Grid>
                 </Border>
             </Grid>
         </Grid>
+
     </Grid>
 </Window>
-

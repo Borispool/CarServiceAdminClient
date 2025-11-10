@@ -33,7 +33,7 @@
             <!-- Кнопки -->
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
                 <!-- *** ВИПРАВЛЕННЯ: Додано MinWidth *** -->
-                <Button Content="Увійти" IsDefault="True" Click="LoginButton_Click" MinWidth="100"/>
+                <Button x:Name="LoginButton" Content="Увійти" IsDefault="True" Click="LoginButton_Click" MinWidth="100"/>
                 <Button Content="Вихід" IsCancel="True" Click="CancelButton_Click" MinWidth="100"/>
             </StackPanel>
         </Grid>

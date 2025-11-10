@@ -5,34 +5,43 @@ namespace CarServiceAdminClient
 {
     public partial class MainWindow : Window
     {
+        // *** НОВЕ ***
+        private MainViewModel _viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+
+            // *** ЗМІНЕНО ***
+            _viewModel = new MainViewModel();
+            DataContext = _viewModel;
 
             // Показуємо вікно входу одразу після завантаження головного вікна
             this.Loaded += MainWindow_Loaded;
         }
 
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        // *** ЗМІНЕНО: Метод тепер 'async' ***
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Робимо головне вікно невидимим, поки йде логін
             this.Visibility = Visibility.Hidden;
 
             var loginWindow = new LoginWindow();
-            // Встановлюємо власника, щоб вікно логіну з'явилось по центру головного
             loginWindow.Owner = this;
             bool? result = loginWindow.ShowDialog();
 
-            // Якщо вхід не успішний (користувач закрив вікно або натиснув "Вихід")
             if (result != true)
             {
-                // Закриваємо головне вікно (і всю програму)
                 this.Close();
             }
             else
             {
-                // Якщо вхід успішний, робимо головне вікно видимим
+                // Якщо вхід успішний...
+
+                // *** НОВЕ: Асинхронно завантажуємо дані з сервера ***
+                await _viewModel.InitializeAsync();
+
+                // ...тільки ПІСЛЯ завантаження даних робимо вікно видимим
                 this.Visibility = Visibility.Visible;
             }
         }

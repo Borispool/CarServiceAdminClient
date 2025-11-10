@@ -22,14 +22,18 @@
                        FontSize="16" FontWeight="Bold" Foreground="#333"/>
 
             <!-- Основний вміст -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,10">
-                <!-- Іконка (буде змінюватись з коду) -->
-                <TextBlock x:Name="IconTextBlock" Text="❓" FontSize="48" Margin="0,0,20,0" VerticalAlignment="Center"/>
-                <!-- Текст повідомлення -->
-                <TextBlock x:Name="MessageTextBlock" Text="Текст повідомлення тут..."
-                           TextWrapping="Wrap" VerticalAlignment="Center"
-                           FontSize="14" Foreground="#555"/>
-            </StackPanel>
+            <Grid Grid.Row="1" VerticalAlignment="Center" Margin="20,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" x:Name="IconTextBlock" Text="❓" FontSize="48" Margin="0,0,20,0" VerticalAlignment="Center"/>
+
+                <TextBlock Grid.Column="1" x:Name="MessageTextBlock" Text="Текст повідомлення тут..."
+               TextWrapping="Wrap" VerticalAlignment="Top" TextAlignment="Left"
+               FontSize="14" Foreground="#555"/>
+            </Grid>
 
             <!-- Кнопки -->
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,10,20,20">
