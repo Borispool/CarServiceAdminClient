@@ -157,7 +157,7 @@ namespace CarServiceAdminClient.ViewModels
 
         public MainViewModel()
         {
-            _apiClient = new ApiClient();
+            _apiClient = ApiClient.Instance; 
             _allClients = new ObservableCollection<Client>();
             _allCars = new ObservableCollection<Car>();
             _allOrders = new ObservableCollection<Order>();
@@ -195,8 +195,62 @@ namespace CarServiceAdminClient.ViewModels
             ExitApplicationCommand = new RelayCommand(p => Application.Current.Shutdown());
         }
 
+        private void OnClientAdded(ClientDto clientDto)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                // Просто додаємо нового клієнта в наш список
+                _allClients.Add(new Client
+                {
+                    Id = clientDto.Id,
+                    FirstName = clientDto.FirstName,
+                    LastName = clientDto.LastName,
+                    PhoneNumber = clientDto.PhoneNumber,
+                    Email = clientDto.Email
+                });
+            });
+        }
+
+        private void OnClientUpdated(ClientDto clientDto)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var existingClient = _allClients.FirstOrDefault(c => c.Id == clientDto.Id);
+                if (existingClient != null)
+                {
+                    // Оновлюємо дані існуючого клієнта
+                    existingClient.FirstName = clientDto.FirstName;
+                    existingClient.LastName = clientDto.LastName;
+                    existingClient.PhoneNumber = clientDto.PhoneNumber;
+                    existingClient.Email = clientDto.Email;
+                }
+            });
+        }
+
+        private void OnClientDeleted(int clientId)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var clientToRemove = _allClients.FirstOrDefault(c => c.Id == clientId);
+                if (clientToRemove != null)
+                {
+                    // Видаляємо клієнта
+                    _allClients.Remove(clientToRemove);
+                }
+            });
+        }
         public async Task InitializeAsync()
         {
+            // 1. Реєструємо обробники real-time оновлень
+            // (Це "магія" SignalR. Сервер тепер може сам нам казати про зміни)
+            _apiClient.RegisterClientUpdate(
+                (clientDto) => OnClientAdded(clientDto),      // Що робити, коли хтось інший додав клієнта
+                (clientDto) => OnClientUpdated(clientDto),    // Що робити, коли хтось оновив клієнта
+                (clientId) => OnClientDeleted(clientId)      // Що робити, коли хтось видалив клієнта
+            );
+            // (Тут можна додати реєстрацію для Car та Order)
+
+            // 2. Завантажуємо початкові дані
             var request = new Request { Command = "GET_ALL_DATA" };
             var response = await _apiClient.SendRequestAsync(request);
 

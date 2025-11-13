@@ -1,123 +1,111 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+// using Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson; // <--- ВИДАЛЕНО (Наш обхід)
+using Newtonsoft.Json;
 using System;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows; // Для MessageBox
+using System.Windows; // Для CustomMessageBox
+using System.Collections.Generic; // <--- ДОДАНО (для LoginWindow)
 
 namespace CarServiceAdminClient.Api
 {
-    // Клас, що відповідає за ВСЮ комунікацію з сервером
+    // Клас, що відповідає за ВСЮ комунікацію з сервером (SignalR версія)
     public class ApiClient
     {
-        private const string ServerAddress = "127.0.0.1"; // Адреса сервера (localhost)
-        private const int ServerPort = 8888;             // Порт сервера
+        // *** ОНОВЛЕНО: Використовуємо 'http' адресу з консолі сервера ***
+        private const string ServerUrl = "http://localhost:5116/carservice";
 
-        // Головний асинхронний метод для відправки запитів
-        public async Task<Response> SendRequestAsync(Request request)
+        private readonly HubConnection _connection;
+
+        // --- Singleton Pattern ---
+        private static readonly Lazy<ApiClient> _instance = new Lazy<ApiClient>(() => new ApiClient());
+        public static ApiClient Instance => _instance.Value;
+        // ---
+
+        private ApiClient()
         {
+            // 1. Будуємо з'єднання
+            _connection = new HubConnectionBuilder()
+                .WithUrl(ServerUrl) // Вказуємо оновлений URL
+                                    // .AddNewtonsoftJsonProtocol() // <--- ЗАЛИШЕНО ВИДАЛЕНИМ (Наш обхід)
+                .Build();
+
+            // *** ДОДАНО: Обробник для автоматичного перепідключення ***
+            _connection.Closed += async (error) =>
+            {
+                // Якщо сервер вимкнувся, чекаємо 5 секунд і пробуємо знову
+                await Task.Delay(5000);
+                await StartConnectionAsync();
+            };
+        }
+
+        public async Task StartConnectionAsync()
+        {
+            if (_connection.State == HubConnectionState.Connected)
+            {
+                return;
+            }
+
             try
             {
-                // 1. Конвертуємо наш об'єкт запиту в JSON-рядок
-                string jsonRequest = JsonConvert.SerializeObject(request);
-                byte[] data = Encoding.UTF8.GetBytes(jsonRequest);
-
-                // 2. Створюємо нове TCP-підключення
-                using (TcpClient client = new TcpClient())
-                {
-                    // Підключаємось до сервера
-                    await client.ConnectAsync(ServerAddress, ServerPort);
-
-                    // 3. Отримуємо потік для читання/запису
-                    using (NetworkStream stream = client.GetStream())
-                    {
-                        // 4. Відправляємо дані (JSON) на сервер
-                        await stream.WriteAsync(data, 0, data.Length);
-
-                        // 5. Отримуємо відповідь від сервера
-                        byte[] buffer = new byte[8192]; // Збільшимо буфер про всяк випадок
-                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                        string jsonResponse = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
-                        // 6. Конвертуємо JSON-відповідь назад в об'єкт Response
-                        return JsonConvert.DeserializeObject<Response>(jsonResponse);
-                    }
-                }
+                await _connection.StartAsync();
             }
             catch (Exception ex)
             {
-                // Якщо сервер впав або недоступний, покажемо помилку
+                ShowConnectionError(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<Response> SendRequestAsync(Request request)
+        {
+            if (_connection.State != HubConnectionState.Connected)
+            {
+                // Спробуємо перепідключитися, якщо раптом втратили зв'язок
+                try
+                {
+                    await StartConnectionAsync();
+                }
+                catch
+                {
+                    // Якщо не вийшло, кидаємо помилку
+                    throw new InvalidOperationException("З'єднання з сервером не встановлено.");
+                }
+            }
+
+            try
+            {
+                return await _connection.InvokeAsync<Response>(request.Command, request.Payload);
+            }
+            catch (Exception ex)
+            {
                 ShowConnectionError(ex.Message);
                 return new Response { IsSuccess = false, Message = ex.Message };
             }
         }
 
+        // --- Методи для реєстрації real-time оновлень ---
+        public void RegisterClientUpdate(Action<ClientDto> onClientAdded, Action<ClientDto> onClientUpdated, Action<int> onClientDeleted)
+        {
+            _connection.On("ClientAdded", onClientAdded);
+            _connection.On("ClientUpdated", onClientUpdated);
+            _connection.On("ClientDeleted", onClientDeleted);
+        }
+
+        // (Тут можна додати аналогічні для Car та Order)
+
         private void ShowConnectionError(string message)
         {
-            // Використовуємо наш кастомний MessageBox
             var errorBox = new CustomMessageBox(
                 $"Не вдалося підключитися до сервера.\nПереконайтеся, що сервер запущено.\n\nПомилка: {message}",
                 "Помилка з'єднання",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
-            errorBox.ShowDialog();
+
+            // Важливо: Показуємо вікно в потоці UI
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                errorBox.ShowDialog();
+            });
         }
-    }
-
-    // --- Моделі для спілкування (копії з сервера) ---
-    // Нам потрібні ці "чисті" класи для серіалізації/десеріалізації
-
-    public class Request
-    {
-        public string Command { get; set; } = string.Empty;
-        public string Payload { get; set; } = string.Empty;
-    }
-
-    public class Response
-    {
-        public bool IsSuccess { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public string Payload { get; set; } = string.Empty;
-    }
-
-    // Клас-контейнер для завантаження всіх даних
-    public class AllDataDto
-    {
-        public List<ClientDto> Clients { get; set; } = new List<ClientDto>();
-        public List<CarDto> Cars { get; set; } = new List<CarDto>();
-        public List<OrderDto> Orders { get; set; } = new List<OrderDto>();
-    }
-
-    // DTO (Data Transfer Object) - "чисті" версії твоїх моделей
-    // без логіки BaseViewModel
-
-    public class ClientDto
-    {
-        public int Id { get; set; }
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string PhoneNumber { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-    }
-
-    public class CarDto
-    {
-        public int Id { get; set; }
-        public int ClientId { get; set; }
-        public string Brand { get; set; } = string.Empty;
-        public string Model { get; set; } = string.Empty;
-        public string VIN { get; set; } = string.Empty;
-        public int Year { get; set; }
-    }
-
-    public class OrderDto
-    {
-        public int Id { get; set; }
-        public int CarId { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public DateTime CreationDate { get; set; }
-        public bool IsRecurringProblem { get; set; }
-        public decimal Cost { get; set; }
     }
 }
