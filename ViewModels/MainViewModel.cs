@@ -9,6 +9,7 @@ using CarServiceAdminClient.Api;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading; // *** НОВЕ: Для таймера ***
 
 namespace CarServiceAdminClient.ViewModels
 {
@@ -18,12 +19,19 @@ namespace CarServiceAdminClient.ViewModels
     {
         private readonly ApiClient _apiClient;
 
+        // *** НОВЕ: Для трекінгу сесії (вимога викладача) ***
+        public int CurrentUserId { get; private set; } = 0;
+        private Timer? _heartbeatTimer;
+        // Інтервал: 5 хвилин (значно менше 30-хвилинного таймауту сесії на сервері)
+        private const int HeartbeatIntervalMs = 5 * 60 * 1000;
+
         #region Колекції Даних
         private readonly ObservableCollection<Client> _allClients;
         private readonly ObservableCollection<Car> _allCars;
         private readonly ObservableCollection<Order> _allOrders;
         #endregion
 
+        // ... (Всі твої існуючі Region-и та властивості залишаються без змін) ...
         #region View-Властивості для Клієнтів
         public ICollectionView ClientsView { get; private set; }
         private Client? _selectedClient;
@@ -192,9 +200,77 @@ namespace CarServiceAdminClient.ViewModels
                 ActiveOrder = null;
             });
 
-            ExitApplicationCommand = new RelayCommand(p => Application.Current.Shutdown());
+            // *** ЗМІНЕНО: ExitApplicationCommand тепер викликає Cleanup ***
+            ExitApplicationCommand = new RelayCommand(async (p) => await ExitApplicationAsync());
         }
 
+        // *** НОВИЙ МЕТОД: Обгортка для коректного виходу ***
+        private async Task ExitApplicationAsync()
+        {
+            await CleanupAsync();
+            Application.Current.Shutdown();
+        }
+
+        // *** НОВИЙ МЕТОД: Очищення та відправка LOGOUT ***
+        public async Task CleanupAsync()
+        {
+            _heartbeatTimer?.Dispose(); // Зупиняємо таймер Heartbeat
+
+            if (CurrentUserId != 0)
+            {
+                // 1. Формуємо запит на LOGOUT
+                var request = new Request { Command = "LOGOUT", Payload = CurrentUserId.ToString() };
+
+                // 2. Відправляємо на сервер (використовуємо ApiClient напряму)
+                try
+                {
+                    // Нам неважлива відповідь, головне — відправити
+                    await _apiClient.SendRequestAsync(request);
+                }
+                catch (Exception ex)
+                {
+                    // Якщо сервер вже впав, ми просто ігноруємо помилку, 
+                    // бо сесія і так скоро "протухне"
+                    Console.WriteLine($"LOGOUT failed: {ex.Message}");
+                }
+                CurrentUserId = 0; // Скидаємо ID
+            }
+        }
+
+        // *** НОВИЙ МЕТОД: Запуск Heartbeat після успішного логіну ***
+        public void StartHeartbeat(int userId)
+        {
+            CurrentUserId = userId;
+            // Таймер, який викликає SendHeartbeatAsync
+            _heartbeatTimer = new Timer(
+                async (e) => await SendHeartbeatAsync(),
+                null,
+                0, // Запускаємо одразу
+                HeartbeatIntervalMs
+            );
+        }
+
+        // *** НОВИЙ МЕТОД: Відправка команди HEARTBEAT ***
+        private async Task SendHeartbeatAsync()
+        {
+            if (CurrentUserId != 0)
+            {
+                var request = new Request { Command = "HEARTBEAT", Payload = CurrentUserId.ToString() };
+                // Ми ігноруємо результат, якщо сервер недоступний, таймер просто повторить спробу.
+                try
+                {
+                    await _apiClient.SendRequestAsync(request);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Heartbeat failed: {ex.Message}");
+                    // Додатково можна додати логіку для попередження користувача,
+                    // якщо heartbeat не проходить кілька разів.
+                }
+            }
+        }
+
+        // ... (Твій існуючий код InitializeAsync та ін.) ...
         public async Task InitializeAsync()
         {
             var request = new Request { Command = "GET_ALL_DATA" };
@@ -610,7 +686,7 @@ namespace CarServiceAdminClient.ViewModels
             // ...
             OrdersView = CollectionViewSource.GetDefaultView(_allOrders);
             OrdersView.Filter = FilterOrders;
-            ApplyOrderSorting(); 
+            ApplyOrderSorting();
             OnPropertyChanged(nameof(OrdersView));
             UpdateAllCommands();
             ActiveView = CurrentView.Orders;

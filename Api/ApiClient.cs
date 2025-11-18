@@ -3,7 +3,9 @@ using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows; // Для MessageBox
+using System.Windows;
+using System.Threading; // *** НОВЕ: Для Task.Delay ***
+using System.Collections.Generic;
 
 namespace CarServiceAdminClient.Api
 {
@@ -12,35 +14,37 @@ namespace CarServiceAdminClient.Api
     {
         private const string ServerAddress = "127.0.0.1"; // Адреса сервера (localhost)
         private const int ServerPort = 8888;             // Порт сервера
+        // *** НОВЕ: Пауза між запитами, щоб уникнути Connection Refused у TCP ***
+        private const int TcpDelayMs = 100;
 
         // Головний асинхронний метод для відправки запитів
         public async Task<Response> SendRequestAsync(Request request)
         {
             try
             {
-                // 1. Конвертуємо наш об'єкт запиту в JSON-рядок
                 string jsonRequest = JsonConvert.SerializeObject(request);
                 byte[] data = Encoding.UTF8.GetBytes(jsonRequest);
 
-                // 2. Створюємо нове TCP-підключення
                 using (TcpClient client = new TcpClient())
                 {
-                    // Підключаємось до сервера
                     await client.ConnectAsync(ServerAddress, ServerPort);
 
-                    // 3. Отримуємо потік для читання/запису
                     using (NetworkStream stream = client.GetStream())
                     {
-                        // 4. Відправляємо дані (JSON) на сервер
                         await stream.WriteAsync(data, 0, data.Length);
 
-                        // 5. Отримуємо відповідь від сервера
-                        byte[] buffer = new byte[8192]; // Збільшимо буфер про всяк випадок
+                        byte[] buffer = new byte[8192];
                         int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                         string jsonResponse = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
                         // 6. Конвертуємо JSON-відповідь назад в об'єкт Response
-                        return JsonConvert.DeserializeObject<Response>(jsonResponse);
+                        var response = JsonConvert.DeserializeObject<Response>(jsonResponse);
+
+                        // *** НОВЕ: Робимо паузу перед поверненням ***
+                        // Це дає TCP-стеку час звільнити порт.
+                        await Task.Delay(TcpDelayMs);
+
+                        return response;
                     }
                 }
             }
@@ -48,6 +52,8 @@ namespace CarServiceAdminClient.Api
             {
                 // Якщо сервер впав або недоступний, покажемо помилку
                 ShowConnectionError(ex.Message);
+                // Робимо паузу і тут, щоб не спамити спробами з'єднання
+                await Task.Delay(TcpDelayMs);
                 return new Response { IsSuccess = false, Message = ex.Message };
             }
         }
@@ -65,8 +71,7 @@ namespace CarServiceAdminClient.Api
     }
 
     // --- Моделі для спілкування (копії з сервера) ---
-    // Нам потрібні ці "чисті" класи для серіалізації/десеріалізації
-
+    // (Твої існуючі DTO залишаються без змін)
     public class Request
     {
         public string Command { get; set; } = string.Empty;
@@ -80,16 +85,12 @@ namespace CarServiceAdminClient.Api
         public string Payload { get; set; } = string.Empty;
     }
 
-    // Клас-контейнер для завантаження всіх даних
     public class AllDataDto
     {
         public List<ClientDto> Clients { get; set; } = new List<ClientDto>();
         public List<CarDto> Cars { get; set; } = new List<CarDto>();
         public List<OrderDto> Orders { get; set; } = new List<OrderDto>();
     }
-
-    // DTO (Data Transfer Object) - "чисті" версії твоїх моделей
-    // без логіки BaseViewModel
 
     public class ClientDto
     {

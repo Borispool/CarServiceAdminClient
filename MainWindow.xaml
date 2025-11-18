@@ -9,7 +9,7 @@
         d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel}"
         Title="Система адміністрування сервісу"
         Height="650" Width="1100" MinHeight="600" MinWidth="1000"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen" Closing="MainWindow_Closing">
     <Grid>
         <Grid.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
